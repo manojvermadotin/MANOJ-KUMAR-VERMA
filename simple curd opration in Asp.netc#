@@ -1,0 +1,573 @@
+ TABLE ----------------------------------------------------------------------------
+ 
+ 
+ 
+CREATE TABLE [dbo].[Employee](  
+    [Id] [int] IDENTITY(1,1) NOT NULL,  
+    [FirstName] [varchar](50) NULL,  
+    [LastName] [varchar](50) NULL,  
+    [PhoneNumber] [nvarchar](15) NULL,  
+    [EmailAddress] [nvarchar](50) NULL,  
+    [Salary] [decimal](18, 2) NULL,  
+    [CreatedDate] [datetime] NULL,  
+ CONSTRAINT [PK_Employee] PRIMARY KEY CLUSTERED   
+(  
+    [Id] ASC  
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]  
+) ON [PRIMARY]  
+  
+GO
+
+
+
+PROCEDURE ------------------------
+
+
+
+CREATE PROC [dbo].[Sp_GridCrud]  
+(  
+@EmpId int=0,@FirstName varchar(50)=Null,@LastName varchar(50)=Null,@PhoneNumber nvarchar(15)=Null,  
+@EmailAddress nvarchar(50)=Null,@Salary decimal=Null,@Event varchar(10)  
+)  
+AS   
+BEGIN  
+    IF(@Event='Select')  
+    BEGIN  
+    SELECT * FROM Employee ORDER BY FirstName ASC;  
+    END  
+  
+    ELSE IF(@Event='Add')  
+    BEGIN  
+    INSERT INTO Employee (FirstName,LastName,PhoneNumber,EmailAddress,Salary,CreatedDate) VALUES(@FirstName,@LastName,@PhoneNumber,@EmailAddress,@Salary,GETDATE());  
+    END  
+  
+    ELSE IF(@Event='Update')  
+    BEGIN  
+    UPDATE Employee SET FirstName=@FirstName,LastName=@LastName,PhoneNumber=@PhoneNumber,EmailAddress=@EmailAddress,Salary=@Salary where Id=@EmpId;  
+    END  
+  
+    ELSE  
+    BEGIN  
+    DELETE FROM Employee WHERE Id=@EmpId;  
+    END  
+END  
+  
+GO 
+
+
+CODE ------------------------------
+
+
+
+
+
+ASPX.CS CODE---------------------------------
+
+
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace GridViewDemo
+{
+    public partial class GridViewDemo : System.Web.UI.Page
+    {
+        private string strConnectionString = ConfigurationManager.ConnectionStrings["myconnection"].ConnectionString;
+        private SqlCommand _sqlCommand;
+        private SqlDataAdapter _sqlDataAdapter;
+        DataSet _dtSet;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                BindEmployeeData();
+
+            }
+            btnUpdate.Visible = false;
+            btnAddEmployee.Visible = true;
+        }
+        private static void ShowAlertMessage(string error)
+        {
+            System.Web.UI.Page page = System.Web.HttpContext.Current.Handler as System.Web.UI.Page;
+            if (page != null)
+            {
+                error = error.Replace("'", "\'");
+                System.Web.UI.ScriptManager.RegisterStartupScript(page, page.GetType(), "err_msg", "alert('" + error + "');", true);
+            }
+        }
+        public void CreateConnection()
+        {
+            SqlConnection _sqlConnection = new SqlConnection(strConnectionString);
+            _sqlCommand = new SqlCommand();
+            _sqlCommand.Connection = _sqlConnection;
+        }
+        public void OpenConnection()
+        {
+            _sqlCommand.Connection.Open();
+        }
+        public void CloseConnection()
+        {
+            _sqlCommand.Connection.Close();
+        }
+        public void DisposeConnection()
+        {
+            _sqlCommand.Connection.Dispose();
+        }
+        public void BindEmployeeData()
+        {
+            try
+            {
+                CreateConnection();
+                OpenConnection();
+                _sqlCommand.CommandText = "Sp_GridCrud";
+                _sqlCommand.CommandType = CommandType.StoredProcedure;
+                _sqlCommand.Parameters.AddWithValue("@Event", "Select");
+                _sqlDataAdapter = new SqlDataAdapter(_sqlCommand);
+                _dtSet = new DataSet();
+                _sqlDataAdapter.Fill(_dtSet);
+                grvEmployee.DataSource = _dtSet;
+                grvEmployee.DataBind();
+            }
+            catch (Exception ex)
+            {
+               // Response.Redirect("The Error is " + ex);
+            }
+            finally
+            {
+                CloseConnection();
+                DisposeConnection();
+            }
+        }
+
+        protected void btnAddEmployee_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                CreateConnection();
+                OpenConnection();
+                _sqlCommand.CommandText = "Sp_GridCrud";
+                _sqlCommand.CommandType = CommandType.StoredProcedure;
+                _sqlCommand.Parameters.AddWithValue("@Event", "Add");
+                _sqlCommand.Parameters.AddWithValue("@FirstName", Convert.ToString(txtFirstName.Text.Trim()));
+                _sqlCommand.Parameters.AddWithValue("@LastName", Convert.ToString(txtLastName.Text.Trim()));
+                _sqlCommand.Parameters.AddWithValue("@PhoneNumber", Convert.ToString(txtPhoneNumber.Text.Trim()));
+                _sqlCommand.Parameters.AddWithValue("@EmailAddress", Convert.ToString(txtEmailAddress.Text.Trim()));
+                _sqlCommand.Parameters.AddWithValue("@Salary", Convert.ToDecimal(txtSalary.Text));
+                int result = Convert.ToInt32(_sqlCommand.ExecuteNonQuery());
+                if (result > 0)
+                {
+
+                    ShowAlertMessage("Record Is Inserted Successfully");
+                    BindEmployeeData();
+                    ClearControls();
+                }
+                else
+                {
+
+                    ShowAlertMessage("Failed");
+                }
+            }
+            catch (Exception ex)
+            {
+
+                ShowAlertMessage("Check your input data");
+
+            }
+            finally
+            {
+                CloseConnection();
+                DisposeConnection();
+            }
+        }
+
+        public void ClearControls()
+        {
+            txtFirstName.Text = "";
+            txtLastName.Text = "";
+            txtPhoneNumber.Text = "";
+            txtEmailAddress.Text = "";
+            txtSalary.Text = "";
+        }
+
+        protected void grvEmployee_RowEditing(object sender, GridViewEditEventArgs e)
+        {
+            btnAddEmployee.Visible = false;
+            btnUpdate.Visible = true;
+
+            int RowIndex = e.NewEditIndex;
+            Label empid = (Label)grvEmployee.Rows[RowIndex].FindControl("lblEmpId");
+            Session["id"] = empid.Text;
+
+            txtFirstName.Text = ((Label)grvEmployee.Rows[RowIndex].FindControl("lblFirstName")).Text.ToString();
+            txtLastName.Text = ((Label)grvEmployee.Rows[RowIndex].FindControl("lblLastName")).Text.ToString();
+            txtPhoneNumber.Text = ((Label)grvEmployee.Rows[RowIndex].FindControl("lblPhoneNumber")).Text.ToString();
+            txtEmailAddress.Text = ((Label)grvEmployee.Rows[RowIndex].FindControl("lblEmailAddress")).Text.ToString();
+            txtSalary.Text = ((Label)grvEmployee.Rows[RowIndex].FindControl("lblSalary")).Text.ToString();
+
+        }
+
+        protected void grvEmployee_RowDeleting(object sender, GridViewDeleteEventArgs e)
+        {
+            try
+            {
+                CreateConnection();
+                OpenConnection();
+                Label id = (Label)grvEmployee.Rows[e.RowIndex].FindControl("lblEmpId");
+                _sqlCommand.CommandText = "Sp_GridCrud";
+                _sqlCommand.Parameters.AddWithValue("@Event", "Delete");
+                _sqlCommand.Parameters.AddWithValue("@EmpId", Convert.ToInt32(id.Text));
+                _sqlCommand.CommandType = CommandType.StoredProcedure;
+                int result = Convert.ToInt32(_sqlCommand.ExecuteNonQuery());
+                if (result > 0)
+                {
+
+                    ShowAlertMessage("Record Is Deleted Successfully");
+                    grvEmployee.EditIndex = -1;
+                    BindEmployeeData();
+                }
+                else
+                {
+                    lblMessage.Text = "Failed";
+                    lblMessage.ForeColor = System.Drawing.Color.Red;
+                    BindEmployeeData();
+                }
+            }
+            catch (Exception ex)
+            {
+
+                ShowAlertMessage("Check your input data");
+            }
+            finally
+            {
+                CloseConnection();
+                DisposeConnection();
+            }
+        }
+
+        protected void grvEmployee_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
+        {
+            grvEmployee.EditIndex = -1;
+            BindEmployeeData();
+        }
+
+        protected void grvEmployee_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            grvEmployee.PageIndex = e.NewPageIndex;
+            BindEmployeeData();
+        }
+
+        protected void btnReset_Click(object sender, EventArgs e)
+        {
+            ClearControls();
+        }
+
+        protected void btnUpdate_Click(object sender, EventArgs e)
+        {
+            try
+            {
+
+                CreateConnection();
+                OpenConnection();
+
+                _sqlCommand.CommandText = "Sp_GridCrud";
+                _sqlCommand.CommandType = CommandType.StoredProcedure;
+                _sqlCommand.Parameters.AddWithValue("@Event", "Update");
+                _sqlCommand.Parameters.AddWithValue("@FirstName", Convert.ToString(txtFirstName.Text.Trim()));
+                _sqlCommand.Parameters.AddWithValue("@LastName", Convert.ToString(txtLastName.Text.Trim()));
+                _sqlCommand.Parameters.AddWithValue("@PhoneNumber", Convert.ToString(txtPhoneNumber.Text.Trim()));
+                _sqlCommand.Parameters.AddWithValue("@EmailAddress", Convert.ToString(txtEmailAddress.Text.Trim()));
+                _sqlCommand.Parameters.AddWithValue("@Salary", Convert.ToDecimal(txtSalary.Text));
+                _sqlCommand.Parameters.AddWithValue("@EmpId", Convert.ToDecimal(Session["id"]));
+
+                int result = Convert.ToInt32(_sqlCommand.ExecuteNonQuery());
+                if (result > 0)
+                {
+                    ShowAlertMessage("Record Is Updated Successfully");
+                    grvEmployee.EditIndex = -1;
+                    BindEmployeeData();
+                    ClearControls();
+                }
+                else
+                {
+                    ShowAlertMessage("Failed");
+                }
+            }
+
+            catch (Exception ex)
+            {
+                ShowAlertMessage("Check your input data");
+            }
+            finally
+            {
+                CloseConnection();
+                DisposeConnection();
+            }
+        }
+    }
+}
+
+
+
+ASPX.CS CODE---------------------------------
+
+
+
+
+
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="GridViewDemo.aspx.cs" Inherits="GridViewDemo.GridViewDemo" %>
+
+<!DOCTYPE html>  
+<html xmlns="http://www.w3.org/1999/xhtml">  
+<head runat="server">  
+    <title>DEMO TEST </title>  
+<%--Botstrap Part--%>  
+    <style>  
+        .button {  
+            background-color: #4CAF50;  
+            border: none;  
+            color: white;  
+            padding: 15px 32px;  
+            text-align: center;  
+            text-decoration: none;  
+            display: inline-block;  
+            font-size: 16px;  
+            margin: 4px 2px;  
+            cursor: pointer;  
+        }  
+      .DataGridFixedHeader {  
+    color: White;  
+    font-size: 13px;  
+    font-family: Verdana;   
+    background-color:yellow  
+}  
+        .grid_item {  
+     
+    background-color: #E3EAEB;  
+    border-width: 1px;  
+    font-family: Verdana;  
+    border-style: solid;  
+    font-size: 12pt;  
+    color: black;  
+    border: 1px solid black;  
+}  
+        .grid_alternate {  
+    border-width: 1px;  
+    font-family: Verdana;  
+    border-style: solid;  
+    font-size: 12pt;  
+    color: black;  
+    background-color: White;  
+}  
+  
+        .button4 {  
+            border-radius: 9px;  
+        }  
+  
+       
+        input[type=text], select {  
+        width: 40%;  
+        padding: 12px 20px;  
+        margin: 10px 0;  
+        display: inline-block;  
+        border: 1px solid #ccc;  
+        border-radius: 4px;  
+        box-sizing: border-box;  
+        font-family: 'Montserrat', sans-serif;    
+        text-indent: 10px;    
+        color: blue;    
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);    
+        font-size: 20px;    
+    }  
+    </style>  
+<%--Botstrap Part--%>  
+  
+<%--  Validation Part--%>  
+<link href="css/template.css" rel="stylesheet" type="text/css" />  
+<link href="css/validationEngine.jquery.css" rel="stylesheet" type="text/css" />  
+<script src="js/jquery-1.6.min.js" type="text/javascript"></script>  
+<script src="js/jquery.validationEngine-en.js" type="text/javascript" charset="utf-8"></script>  
+<script src="js/jquery.validationEngine.js" type="text/javascript" charset="utf-8"></script>  
+  
+<script type="text/javascript">  
+    jQuery(document).ready(function () {  
+        jQuery("#form1").validationEngine();  
+    });  
+</script>  
+<%--  Validation Part--%>  
+  
+<%--<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">--%>  
+  
+</head>  
+<body>  
+    <form id="form1" runat="server">  
+  <fieldset>  
+    <legend style="font-family: Arial Black;background-color:yellow; color:red; font-size:larger;font-style: oblique"></legend>  
+                <table align="center">  
+                    <tr>  
+                        <td colspan="3" align="center" class="auto-style1">  
+                            <strong style="background-color: Yellow;color: Blue; text-align: center; font-style: oblique"></strong>  
+                        </td>  
+                    </tr>  
+                    <tr>  
+                                            
+                        <td style="text-align:center">  
+                            <asp:TextBox runat="server" ID="txtFirstName" placeholder="Enter First Name.." ValidationGroup="add" CssClass="validate[required]"></asp:TextBox>  
+                        </td>  
+                    </tr>  
+                    <tr>  
+                          
+                        <td style="text-align:center">  
+                            <asp:TextBox runat="server" ID="txtLastName" placeholder="Enter Last Name.." ValidationGroup="add" CssClass="validate[required]"></asp:TextBox>  
+                        </td>  
+                    </tr>  
+                    <tr>  
+                         
+                        <td style="text-align:center">  
+                            <asp:TextBox runat="server" placeholder="Enter Phone Number.." ID="txtPhoneNumber" ValidationGroup="add" CssClass="validate[required,custom[phone]" ></asp:TextBox>  
+                        </td>  
+                        <td></td>  
+                    </tr>  
+                    <tr>  
+                         
+                        <td style="text-align:center">  
+                            <asp:TextBox runat="server" ID="txtEmailAddress" placeholder="Enter Email Address.." ValidationGroup="add" CssClass="validate[required,custom[email]"></asp:TextBox>  
+                        </td>  
+                    </tr>  
+                    <tr>  
+                        
+                        <td style="text-align:center">  
+                            <asp:TextBox runat="server" ID="txtSalary" placeholder="Enter Salary.." ValidationGroup="add" CssClass="validate[required,custom[number]"></asp:TextBox>  
+                        </td>  
+                    </tr>  
+                    <tr>  
+                        <td colspan="3" align="center">  
+                            <asp:Button runat="server" ID="btnAddEmployee" Text="Add" OnClick="btnAddEmployee_Click" class="button button4" ValidationGroup="add"/>  
+                            <asp:Button runat="server" ID="btnUpdate" Text="Update" class="button button4" OnClick="btnUpdate_Click"/>  
+                            <asp:Button runat="server" ID="btnReset" Text="Reset"  class="button button4" OnClick="btnReset_Click"/>  
+                        </td>  
+                    </tr>  
+                    <tr>  
+                        <td colspan="3" align="center">  
+                            <br />  
+                            <asp:Label runat="server" ID="lblMessage"></asp:Label>  
+                            <br />  
+                            <br />  
+  
+                        </td>  
+                    </tr>  
+                    <tr>  
+                        <td colspan="3">  
+                            <asp:GridView ID="grvEmployee" runat="server" AllowPaging="true" CellPadding="2" EnableModelValidation="True"  
+                                        ForeColor="red" GridLines="Both" ItemStyle-HorizontalAlign="center" EmptyDataText="There Is No Records In Database!" AutoGenerateColumns="false" Width="1100px"  
+                                HeaderStyle-ForeColor="blue"   OnPageIndexChanging="grvEmployee_PageIndexChanging" OnRowCancelingEdit="grvEmployee_RowCancelingEdit" OnRowDeleting="grvEmployee_RowDeleting" OnRowEditing="grvEmployee_RowEditing">  
+                                <HeaderStyle CssClass="DataGridFixedHeader" />  
+                                <RowStyle CssClass="grid_item" />  
+                                <AlternatingRowStyle CssClass="grid_alternate" />  
+                                <FooterStyle CssClass="DataGridFixedHeader" />  
+                                <Columns>  
+                                    <asp:TemplateField HeaderText="EmpId">  
+                                         <HeaderStyle HorizontalAlign="Left" />  
+                                        <ItemStyle HorizontalAlign="Left" />  
+                                        <ItemTemplate>  
+                                            <asp:Label runat="server" ID="lblEmpId" Text='<%#Eval("id") %>'></asp:Label>  
+                                        </ItemTemplate>  
+                                    </asp:TemplateField>  
+                                    <asp:TemplateField HeaderText="FirstName">  
+                                         <HeaderStyle HorizontalAlign="Left" />  
+                                        <ItemStyle HorizontalAlign="Left" />  
+                                        <ItemTemplate>  
+                                            <asp:Label runat="server" ID="lblFirstName" Text='<%#Eval("FirstName") %>'></asp:Label>  
+                                        </ItemTemplate>  
+                                          
+                                    </asp:TemplateField>  
+                                    <asp:TemplateField HeaderText="LastName">  
+                                         <HeaderStyle HorizontalAlign="Left" />  
+                                        <ItemStyle HorizontalAlign="Left" />  
+                                        <ItemTemplate>  
+                                            <asp:Label runat="server" ID="lblLastName" Text='<%#Eval("LastName") %>'></asp:Label>  
+                                        </ItemTemplate>  
+                                          
+                                    </asp:TemplateField>  
+                                    <asp:TemplateField HeaderText="Phone No.">  
+                                         <HeaderStyle HorizontalAlign="Left" />  
+                                        <ItemStyle HorizontalAlign="Left" />  
+                                        <ItemTemplate>  
+                                            <asp:Label runat="server" ID="lblPhoneNumber" Text='<%#Eval("PhoneNumber") %>'></asp:Label>  
+                                        </ItemTemplate>  
+                                          
+                                    </asp:TemplateField>  
+                                    <asp:TemplateField HeaderText="Email">  
+                                         <HeaderStyle HorizontalAlign="Left" />  
+                                        <ItemStyle HorizontalAlign="Left" />  
+                                        <ItemTemplate>  
+                                            <asp:Label runat="server" ID="lblEmailAddress" Text='<%#Eval("EmailAddress") %>'></asp:Label>  
+                                        </ItemTemplate>  
+                                          
+                                    </asp:TemplateField>  
+  
+                                    <asp:TemplateField HeaderText="Salary">  
+                                         <HeaderStyle HorizontalAlign="Left" />  
+                                        <ItemStyle HorizontalAlign="Left" />  
+                                        <ItemTemplate>  
+                                            <asp:Label runat="server" ID="lblSalary" Text='<%#Eval("Salary") %>'></asp:Label>  
+                                        </ItemTemplate>  
+                                        
+                                    </asp:TemplateField>  
+                                    <asp:TemplateField HeaderText="Update">  
+                                         <HeaderStyle HorizontalAlign="Left" />  
+                                        <ItemStyle HorizontalAlign="Left" />  
+                                        <ItemTemplate>  
+                                            <asp:LinkButton runat="server" ID="btnEdit" Text="Edit" CommandName="Edit" ToolTip="Click here to Edit the record" />                                                                                         
+                                        </ItemTemplate>  
+                                         
+                                    </asp:TemplateField>  
+                                    <asp:TemplateField HeaderText="Delete">  
+                                        <HeaderStyle HorizontalAlign="Left" />  
+                                        <ItemStyle HorizontalAlign="Left" />  
+                                        <ItemTemplate>                                                                          
+                                                <asp:LinkButton runat="server" ID="btnDelete" Text="Delete" CommandName="Delete" OnClientClick="return confirm('Are You Sure You want to Delete the Record?');" ToolTip="Click here to Delete the record" />  
+                                            </span>  
+                                        </ItemTemplate>                                         
+                                    </asp:TemplateField>  
+                                </Columns>  
+  
+                            </asp:GridView>  
+                        </td>  
+                    </tr>  
+                </table>  
+      </fieldset>  
+    </form>  
+</body>  
+    <br />  
+    <br />  
+   <footer>    
+        <p style="background-color: Yellow; font-weight: bold; color:blue; text-align: center; font-style: oblique">© <script> document.write(new Date().toDateString()); </script></p>    
+    </footer>    
+</html>  
+
+
+
+WEBCONFIG CODE---------------------------------
+
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  For more information on how to configure your ASP.NET application, please visit
+  http://go.microsoft.com/fwlink/?LinkId=169433
+  -->
+<configuration>
+  <system.web>
+    <compilation debug="true" targetFramework="4.5" />
+    <httpRuntime targetFramework="4.5" />
+  </system.web>
+
+  <connectionStrings>
+    <add name="myconnection" connectionString="Data Source=HETLESS;Database=Demo;Integrated Security=True" providerName="System.Data.SqlClient"/>
+  </connectionStrings>
+</configuration>
