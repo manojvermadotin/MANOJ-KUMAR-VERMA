@@ -1,0 +1,252 @@
+ <div class="panel-body">
+
+                        <div class="row ">
+                            <div class="col-xs-12 col-sm-12 col-md-12">
+                                <div class="panel-group">
+                                    <asp:GridView ID="grdvUser" runat="server" OnPreRender="grdvUser_PreRender" ClientIDMode="Static" ShowHeaderWhenEmpty="true" EmptyDataText="No data found for Users" AutoGenerateColumns="False" GridLines="None" HeaderStyle-Wrap="true"
+                                        Width="100%" ShowFooter="true"  OnPageIndexChanging="grdvUser_PageIndexChanging" OnRowCancelingEdit="grdvUser_RowCancelingEdit" OnRowDeleting="grdvUser_RowDeleting" OnRowEditing="grdvUser_RowEditing"
+                                    
+                                        
+                                        
+                                        CssClass="GridTabletrCss table table-striped table-bordered table-hover display">
+
+                                        <Columns>
+                                            <asp:TemplateField HeaderText="Sr No.">
+                                                <ItemTemplate>
+                                                        <%#Container.DataItemIndex+1 %>
+                                                </ItemTemplate>
+                                                <ItemStyle CssClass="text-center" />
+                                            </asp:TemplateField>
+
+                                            <asp:TemplateField HeaderText="EmpId">
+                                                <ItemTemplate>
+                                                   <asp:Label runat="server" ID="lblEmpId" Text='<%#Eval("Id") %>'></asp:Label>
+                                                </ItemTemplate>
+                                                <ItemStyle CssClass="text-center" />
+                                            </asp:TemplateField>
+
+                                            <asp:TemplateField HeaderText="FirstName">
+                                                <ItemTemplate>
+                                                    <asp:Label runat="server" ID="lblFirstName" Text='<%#Eval("FirstName") %>'></asp:Label>  
+                                                </ItemTemplate>
+                                                <ItemStyle CssClass="text-center" />
+                                            </asp:TemplateField>
+
+
+                                              <asp:TemplateField HeaderText="LastName">
+                                                <ItemTemplate>
+                                                    <asp:Label runat="server" ID="lblLastName" Text='<%#Eval("LastName") %>'></asp:Label>  
+                                                </ItemTemplate>
+                                                <ItemStyle CssClass="text-center" />
+                                            </asp:TemplateField>
+
+
+
+
+
+                                              <asp:TemplateField HeaderText="Phone No ">
+                                                <ItemTemplate>
+                                                   <asp:Label runat="server" ID="lblPhoneNumber" Text='<%#Eval("PhoneNumber") %>'></asp:Label> 
+                                                </ItemTemplate>
+                                                <ItemStyle CssClass="text-center" />
+                                            </asp:TemplateField>
+
+
+
+
+                                              <asp:TemplateField HeaderText="Email">
+                                                <ItemTemplate>
+                                                     <asp:Label runat="server" ID="lblEmailAddress" Text='<%#Eval("EmailAddress") %>'></asp:Label> 
+                                                </ItemTemplate>
+                                                <ItemStyle CssClass="text-center" />
+                                            </asp:TemplateField>
+
+
+
+
+                                              <asp:TemplateField HeaderText="Salary">
+                                                <ItemTemplate>
+                                                   <asp:Label runat="server" ID="lblSalary" Text='<%#Eval("Salary") %>'></asp:Label>  
+                                                </ItemTemplate>
+                                                <ItemStyle CssClass="text-center" />
+                                            </asp:TemplateField>
+
+
+
+
+
+
+
+
+
+                                            <asp:TemplateField HeaderText="Edit">
+                                                <ItemTemplate>
+                                                 <asp:LinkButton runat="server" ID="btnEdit" Text="Edit" CommandName="Edit" ToolTip="Click here to Edit the record" />                                                                                         
+                                              <%--  <asp:LinkButton ID="lnkbtnDelete" OnClick="lnkbtnDelete_Click" runat="server"
+                                                    ToolTip="Delete" OnClientClick="return confirm('Are you sure you want to Delete this User ?');"><h4 class="glyphicon glyphicon-trash text-danger"></h4></asp:LinkButton>--%>
+                                                </ItemTemplate>
+                                                <ItemStyle CssClass="text-center" />
+                                            </asp:TemplateField>
+                                                
+
+                                              <asp:TemplateField HeaderText="Delete">
+                                                <ItemTemplate>
+                                                <asp:LinkButton runat="server" ID="btnDelete" Text="Delete" CommandName="Delete" OnClientClick="return confirm('Are You Sure You want to Delete the Record?');" ToolTip="Click here to Delete the record" />                                                                                       
+                                              <%--  <asp:LinkButton ID="lnkbtnDelete" OnClick="lnkbtnDelete_Click" runat="server"
+                                                    ToolTip="Delete" OnClientClick="return confirm('Are you sure you want to Delete this User ?');"><h4 class="glyphicon glyphicon-trash text-danger"></h4></asp:LinkButton>--%>
+                                                </ItemTemplate>
+                                                <ItemStyle CssClass="text-center" />
+                                            </asp:TemplateField>
+
+
+
+
+
+
+
+                                        </Columns>
+                                    </asp:GridView>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    
+                    
+                    
+                    -------------------jquery
+                    
+                    
+                    
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.6.1/css/buttons.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.6.1/css/buttons.jqueryui.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/dataTables.jqueryui.min.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
+    <%--No clearify--%>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.2.2/jszip.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.62/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.62/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.1/js/buttons.colVis.min.js"></script>
+
+
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#grdvUser').DataTable({
+
+                buttons: [
+                                {
+                                    extend: 'copyHtml5',
+                                    exportOptions: {
+                                        columns: ':not(:last-child)',
+                                        modifier: {
+                                            selected: true
+                                        }
+                                    }
+                                },
+                                {
+                                    extend: 'excelHtml5',
+                                    // text: '<i class="fa fa-file-excel-o" style="font-size:17px;"></i>',
+                                    //  text: 'Print current page',
+                                    autoPrint: false,
+                                    orientation: 'landscape',
+                                    titleAttr: 'Export to Excel',
+                                    title: 'Employee Data',
+                                    exportOptions: {
+                                        columns: ':not(:last-child)',
+                                        modifier: {
+                                            selected: true,
+                                            page: 'current'
+                                        }
+                                    }
+                                },
+                              {
+                                  extend: 'pdfHtml5',
+                                  // text: '<i class="fa fa-file-pdf-o style="font-size:23px;"></i>',
+                                  //  text: 'Print current page',
+                                  autoPrint: false,
+                                  orientation: 'landscape',
+                                  text: 'pdf',
+                                  titleAttr: 'Export to PDF',
+                                  title: 'Data Show ',
+                                  exportOptions: {
+                                      columns: ':not(:last-child)',
+                                      modifier: {
+                                          selected: true,
+                                          page: 'current'
+                                      }
+                                  },
+                              },
+                                'colvis'
+                ],
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                bJQueryUI: true,
+                bAutoWidth: false,
+                "bProcessing": true,
+                "bScrollAutoCss": true,
+                "sPaginationType": "full_numbers",
+                "bRetrieve": true,
+                "fnInitComplete": function () {
+                    this.css("visibility", "visible");
+                },
+                "sScrollXInner": "150%",
+                "bScrollCollapse": true,
+
+                sDom: 'BT<"clear"><"H"lfr>t<"F"ip>'
+                //lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
+            });
+        });
+        
+        
+        
+        
+        cs code --------------------------------
+        
+        
+         protected void grdvUser_PreRender(object sender, EventArgs e)
+        {
+            try
+            {
+                int j = 0;
+
+                j = grdvUser.Rows.Count;
+                if (j > 0)
+                {
+                    grdvUser.UseAccessibleHeader = false;
+                    grdvUser.HeaderRow.TableSection = TableRowSection.TableHeader;
+                    grdvUser.FooterRow.TableSection = TableRowSection.TableFooter;
+                    int CellCount = grdvUser.FooterRow.Cells.Count;
+                    grdvUser.FooterRow.Cells.Clear();
+                    grdvUser.FooterRow.Cells.Add(new TableCell());
+                    grdvUser.FooterRow.Cells[0].ColumnSpan = CellCount - 1;
+                    grdvUser.FooterRow.Cells[0].HorizontalAlign = HorizontalAlign.Right;
+                    grdvUser.FooterRow.Cells.Add(new TableCell());
+
+                    TableFooterRow tfr = new TableFooterRow();
+                    for (int i = 0; i < CellCount; i++)
+                    {
+                        tfr.Cells.Add(new TableCell());
+
+                        grdvUser.FooterRow.Controls[1].Controls.Add(tfr);
+                    }
+                }
+            }
+
+            catch (Exception ex)
+            {
+
+            }
+
+        }
